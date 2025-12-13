@@ -1,0 +1,31 @@
+[versions]
+kotlin = "2.2.21"
+coroutines = "1.10.2"
+kotlinxIo = "0.8.2"
+nativebuilds = "0.6.2"
+zstd = "1.5.7.4"
+
+[libraries]
+coroutines-bom = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-bom", version.ref = "coroutines" }
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+
+kotlinx-io = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinxIo" }
+
+desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
+junit = { module = "junit:junit", version = "4.13.2" }
+kotlin-test-main =  { module = "org.jetbrains.kotlin:kotlin-test" }
+kotlin-test-junit =  { module = "org.jetbrains.kotlin:kotlin-test-junit" }
+ktlint-cli = { module = "com.pinterest.ktlint:ktlint-cli", version = "1.8.0" }
+
+gradle-android = { module = "com.android.tools.build:gradle", version = "8.13.2" }
+gradle-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+gradle-cocoapods = { module = "org.jetbrains.kotlin.native.cocoapods:org.jetbrains.kotlin.native.cocoapods.gradle.plugin", version.ref = "kotlin" }
+gradle-dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "2.1.0" }
+gradle-detekt = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version = "1.23.8" }
+gradle-kotlin-jvm = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
+gradle-maven-publish = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.35.0" }
+gradle-nativebuilds = { module = "com.ensody.nativebuilds:com.ensody.nativebuilds.gradle.plugin", version.ref = "nativebuilds" }
+
+nativebuilds-zstd-core = { module = "com.ensody.nativebuilds:zstd-libzstd", version.ref = "zstd" }
+nativebuilds-zstd-headers = { module = "com.ensody.nativebuilds:zstd-headers", version.ref = "zstd" }

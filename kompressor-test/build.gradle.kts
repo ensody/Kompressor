@@ -1,0 +1,18 @@
+import com.ensody.buildlogic.setupBuildLogic
+
+plugins {
+    id("com.ensody.build-logic.android")
+    id("com.ensody.build-logic.kmp")
+    id("com.ensody.build-logic.publish")
+}
+
+setupBuildLogic {
+    kotlin {
+        sourceSets.commonMain.dependencies {
+            api(libs.coroutines.core)
+            api(project(":kompressor-core"))
+            api(project(":kompressor-kotlinx-io"))
+            api(libs.kotlin.test.main)
+        }
+    }
+}

@@ -1,0 +1,23 @@
+*.iml
+.gradle
+.kotlin
+build
+local.properties
+.credentials
+.idea
+.venv*
+.ruby*
+.DS_Store*
+/captures
+.externalNativeBuild
+.cxx
+kotlin-js-store
+
+# iOS projects
+*.podspec
+*.xcodeproj
+*.xcworkspace
+Pods
+
+.zig-cache
+zig-out

@@ -1,0 +1,5 @@
+package = com.ensody.kompressor.internal.zstd
+headerFilter = *
+headers = zstd.h \
+          zstd_errors.h \
+          zdict.h
