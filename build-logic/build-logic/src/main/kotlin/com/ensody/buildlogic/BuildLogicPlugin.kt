@@ -113,7 +113,7 @@ fun Project.setupBuildLogic(block: Project.() -> Unit) {
                 name = "${rootProject.name}: ${project.name}"
                 description = project.description?.takeIf { it.isNotBlank() }
                     ?: "Kotlin Multiplatform compression algorithms"
-                url = "https://github.com/ensody/ReactiveState-Kotlin"
+                url = "https://github.com/ensody/Kompressor"
                 licenses {
                     apache2()
                 }

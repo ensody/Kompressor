@@ -49,7 +49,7 @@ subprojects {
 
 ## Example: zstd
 
-Every compression algorithm implements the `Transform` interface.
+Every compression algorithm implements the `SliceTransform` interface.
 
 If the data fits in RAM you can simply call the `.transform(ByteArray)` extension function:
 
@@ -60,26 +60,26 @@ val decompressed: ByteArray = ZstdDecompressor().transform(compressed)
 assertContentEquals(testData, decompressed)
 ```
 
-Normally, you'll want to stream the data, so even large inputs fit in RAM. While `Transform` provides a low-level API for this, let's better use kotlinx-io:
+Normally, you'll want to stream the data, so even large inputs fit in RAM. While `SliceTransform` provides a low-level API for this, let's better use kotlinx-io:
 
 ```kotlin
 val source: Source = ...
 val sink: Sink = ...
-source.pipe(ZstdCompressor(compressionLevel = 3)).buffered().transferTo(sink)
+source.pipe(ZstdCompressor(compressionLevel = 3)).buffered().use { it.transferTo(sink) }
 ```
 
 Or for decompression:
 
 ```kotlin
-source.pipe(ZstdDecompressor()).buffered().transferTo(sink)
+source.pipe(ZstdDecompressor()).buffered().use { it.transferTo(sink) }
 ```
 
 You can also build a pipe with a sink:
 
 ```kotlin
-val decompressor = ZstdDecompressor().pipe(sink).buffered()
-source.transferTo(decompressor)
-decompressor.close() // this writes any remaining data to the sink
+ZstdDecompressor().pipe(sink).buffered().use { decompressor ->
+    source.transferTo(decompressor)
+}
 ```
 
 ## License
