@@ -55,10 +55,10 @@ fun Project.setupBuildLogic(block: Project.() -> Unit) {
         }
         if (extensions.findByType<KotlinMultiplatformExtension>() != null) {
             setupKmp {
-                if (project.name == "kompressor-core") {
-                    addAllTargets()
-                } else {
+                if (project.name.endsWith("--nativelib")) {
                     addAllNonJsTargets()
+                } else {
+                    addAllTargets()
                 }
                 compilerOptions {
                     optIn.add("kotlinx.coroutines.ExperimentalCoroutinesApi")

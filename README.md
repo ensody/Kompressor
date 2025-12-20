@@ -15,7 +15,7 @@ The underlying native libraries are provided by the [NativeBuilds](https://githu
 ## Supported algorithms
 
 * zstd/ZStandard
-* ...more coming soon (deflate/gzip, lz4, bzip2)...
+* ...more planned... (deflate/gzip, lz4, snappy, brotli, bzip2, bzip3)
 
 ## Installation
 
@@ -27,7 +27,7 @@ dependencies {
     api(platform("com.ensody.kompressor:kompressor-bom:VERSION"))
 
     // zstd/Zstandard
-    api("com.ensody.kompressor:kompressor-zstd")
+    api("com.ensody.kompressor:kompressor-zstd--nativelib")
     // Select the native zstd library version from NativeBuilds
     api("com.ensody.nativebuilds:zstd-libzstd:1.5.7.4")
 }

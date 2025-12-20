@@ -72,10 +72,10 @@ fun Project.setupAndroid(
                 // no JNI code.
                 if (requested.group == "com.ensody.nativebuilds" && requested.name.endsWith("-android") ||
                     // The NativeBuilds libs always get integrated in some JNI wrapper module that contains the actual
-                    // JNI code. By convention we call these wrapper modules "...--jni-wrapper" and the final
+                    // JNI code. By convention we call these wrapper modules "...--native-wrapper" and the final
                     // KMP Android artifact gets published to Maven with an additional "-android" suffix.
                     // This rule should result in a relatively low chance of false positives.
-                    requested.name.endsWith("--jni-wrapper-android")
+                    requested.name.endsWith("--nativelib-android")
                 ) {
                     // Replace with the -jvm artifact
                     useTarget("${requested.group}:${requested.name.removeSuffix("-android")}-jvm:${requested.version}")

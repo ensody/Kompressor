@@ -17,7 +17,11 @@ SliceClass::SliceClass(JNIEnv *env, jclass progressClass)
 static JavaVM *sVm;
 static SliceClass *sliceClass;
 
-extern "C" JNIEXPORT jint
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+JNIEXPORT jint
 JNI_OnLoad(
         JavaVM *vm,
         void *reserved
@@ -34,7 +38,7 @@ JNI_OnLoad(
     return env->GetVersion();
 }
 
-extern "C" JNIEXPORT void
+JNIEXPORT void
 JNI_OnUnLoad(
         JavaVM *vm,
         void *reserved
@@ -43,7 +47,7 @@ JNI_OnUnLoad(
     sVm = NULL;
 }
 
-extern "C" JNIEXPORT jlong JNICALL
+JNIEXPORT jlong JNICALL
 Java_com_ensody_kompressor_zstd_ZstdWrapper_createCompressor(
         JNIEnv *env,
         jobject type
@@ -52,7 +56,7 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_createCompressor(
     return reinterpret_cast<jlong>(cctx);
 }
 
-extern "C" JNIEXPORT void JNICALL
+JNIEXPORT void JNICALL
 Java_com_ensody_kompressor_zstd_ZstdWrapper_freeCompressor(
         JNIEnv *env,
         jobject type,
@@ -62,7 +66,7 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_freeCompressor(
     ZSTD_freeCCtx(cctx);
 }
 
-extern "C" JNIEXPORT jlong JNICALL
+JNIEXPORT jlong JNICALL
 Java_com_ensody_kompressor_zstd_ZstdWrapper_setParameter(
         JNIEnv *env,
         jobject type,
@@ -74,7 +78,7 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_setParameter(
     return ZSTD_CCtx_setParameter(cctx, static_cast<ZSTD_cParameter>(parameter), value);
 }
 
-extern "C" JNIEXPORT jlong JNICALL
+JNIEXPORT jlong JNICALL
 Java_com_ensody_kompressor_zstd_ZstdWrapper_compressStream(
         JNIEnv *env,
         jobject type,
@@ -124,7 +128,7 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_compressStream(
 }
 
 
-extern "C" JNIEXPORT jlong JNICALL
+JNIEXPORT jlong JNICALL
 Java_com_ensody_kompressor_zstd_ZstdWrapper_createDecompressor(
         JNIEnv *env,
         jobject type
@@ -133,7 +137,7 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_createDecompressor(
     return reinterpret_cast<jlong>(dctx);
 }
 
-extern "C" JNIEXPORT void JNICALL
+JNIEXPORT void JNICALL
 Java_com_ensody_kompressor_zstd_ZstdWrapper_freeDecompressor(
         JNIEnv *env,
         jobject type,
@@ -143,7 +147,7 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_freeDecompressor(
     ZSTD_freeDCtx(dctx);
 }
 
-extern "C" JNIEXPORT jlong JNICALL
+JNIEXPORT jlong JNICALL
 Java_com_ensody_kompressor_zstd_ZstdWrapper_decompressStream(
         JNIEnv *env,
         jobject type,
@@ -191,7 +195,7 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_decompressStream(
     return result;
 }
 
-extern "C" JNIEXPORT jstring JNICALL
+JNIEXPORT jstring JNICALL
 Java_com_ensody_kompressor_zstd_ZstdWrapper_getErrorName(JNIEnv *env, jobject type, jlong code) {
     auto codeValue = static_cast<size_t>(code);
     if (!ZSTD_isError(codeValue)) {
@@ -199,3 +203,7 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_getErrorName(JNIEnv *env, jobject ty
     }
     return env->NewStringUTF(ZSTD_getErrorName(codeValue));
 }
+
+#ifdef __cplusplus
+}
+#endif
