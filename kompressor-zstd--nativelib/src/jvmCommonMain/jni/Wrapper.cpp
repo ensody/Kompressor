@@ -1,51 +1,11 @@
 #include <zstd.h>
 #include <jni.h>
-
-class __attribute__((visibility("hidden"))) SliceClass {
-public:
-    SliceClass(JNIEnv *env, jclass progressClass);
-
-    jfieldID readStart;
-    jfieldID writeStart;
-};
-
-SliceClass::SliceClass(JNIEnv *env, jclass progressClass)
-        : readStart(env->GetFieldID(progressClass, "readStart", "I")),
-          writeStart(env->GetFieldID(progressClass, "writeStart", "I")) {
-}
-
-static JavaVM *sVm;
-static SliceClass *sliceClass;
+#include "DefaultLoad.h"
+#include "SliceClass.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-JNIEXPORT jint
-JNI_OnLoad(
-        JavaVM *vm,
-        void *reserved
-) {
-    JNIEnv *env = NULL;
-    sVm = vm;
-
-    if (vm->GetEnv((void **) &env, JNI_VERSION_1_4) != JNI_OK) {
-        return JNI_ERR;
-    }
-
-    sliceClass = new SliceClass(env, env->FindClass("com/ensody/kompressor/core/ByteArraySlice"));
-
-    return env->GetVersion();
-}
-
-JNIEXPORT void
-JNI_OnUnLoad(
-        JavaVM *vm,
-        void *reserved
-) {
-    delete sliceClass;
-    sVm = NULL;
-}
 
 JNIEXPORT jlong JNICALL
 Java_com_ensody_kompressor_zstd_ZstdWrapper_createCompressor(
@@ -99,12 +59,6 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_compressStream(
     if (outputElements == NULL) {
         return -ZSTD_error_GENERIC;
     }
-    ZSTD_outBuffer outBuffer = {
-            .dst = outputElements,
-            .size = static_cast<size_t>(outputEndExclusive),
-            .pos = static_cast<size_t>(outputStart),
-    };
-
     jbyte *inputElements = env->GetByteArrayElements(inputByteArray, NULL);
     if (inputElements == NULL) {
         env->ReleaseByteArrayElements(outputByteArray, outputElements, 0);
@@ -114,6 +68,11 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_compressStream(
             .src = inputElements,
             .size = static_cast<size_t>(inputEndExclusive),
             .pos = static_cast<size_t>(inputStart),
+    };
+    ZSTD_outBuffer outBuffer = {
+            .dst = outputElements,
+            .size = static_cast<size_t>(outputEndExclusive),
+            .pos = static_cast<size_t>(outputStart),
     };
 
     size_t result = ZSTD_compressStream2(cctx, &outBuffer, &inBuffer, finish ? ZSTD_e_end : ZSTD_e_continue);
@@ -126,7 +85,6 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_compressStream(
 
     return result;
 }
-
 
 JNIEXPORT jlong JNICALL
 Java_com_ensody_kompressor_zstd_ZstdWrapper_createDecompressor(
@@ -167,12 +125,6 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_decompressStream(
     if (outputElements == NULL) {
         return -ZSTD_error_GENERIC;
     }
-    ZSTD_outBuffer outBuffer = {
-            .dst = outputElements,
-            .size = static_cast<size_t>(outputEndExclusive),
-            .pos = static_cast<size_t>(outputStart),
-    };
-
     jbyte *inputElements = env->GetByteArrayElements(inputByteArray, NULL);
     if (inputElements == NULL) {
         env->ReleaseByteArrayElements(outputByteArray, outputElements, 0);
@@ -182,6 +134,11 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_decompressStream(
             .src = inputElements,
             .size = static_cast<size_t>(inputEndExclusive),
             .pos = static_cast<size_t>(inputStart),
+    };
+    ZSTD_outBuffer outBuffer = {
+            .dst = outputElements,
+            .size = static_cast<size_t>(outputEndExclusive),
+            .pos = static_cast<size_t>(outputStart),
     };
 
     size_t result = ZSTD_decompressStream(dctx, &outBuffer, &inBuffer);

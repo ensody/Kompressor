@@ -49,7 +49,7 @@ internal class ZstdTest {
     @Test
     fun largeSample() {
         val seed = 42
-        val size: Long = 256 * 1024 * 1024 + 3
+        val size: Long = 256L * 1024 * 1024 + 3
         val reference = RandomSource(Random(seed = seed), size).buffered()
         val source = RandomSource(Random(seed = seed), size).buffered()
         source.pipe(ZstdCompressor(compressionLevel = 3)).pipe(ZstdDecompressor())

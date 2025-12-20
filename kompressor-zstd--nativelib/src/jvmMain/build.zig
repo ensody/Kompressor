@@ -26,6 +26,7 @@ fn setupTarget(b: *std.Build, step: *std.Build.Step, comptime tag: std.Target.Os
         .windows => "windows",
         else => "unix",
     }));
+    lib.root_module.addIncludePath(b.path("../../../jni/common/include"));
     lib.root_module.addIncludePath(b.path("../../build/nativebuilds/zstd-headers-iosarm64/include"));
 
     lib.root_module.link_libc = true;
@@ -37,6 +38,8 @@ fn setupTarget(b: *std.Build, step: *std.Build.Step, comptime tag: std.Target.Os
     // TODO: Automatically find all .c/.cpp files in the jni folder
     lib.root_module.addCSourceFiles(.{
         .files = &.{
+            "../../../jni/common/src/DefaultLoad.cpp",
+            "../../../jni/common/src/SliceClass.cpp",
             "../jvmCommonMain/jni/Wrapper.cpp",
         },
         .flags = &.{
