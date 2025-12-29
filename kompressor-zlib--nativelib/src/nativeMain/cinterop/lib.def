@@ -1,3 +1,2 @@
 package = com.ensody.kompressor.internal.zlib
-headerFilter = include/*
 headers = zlib.h zconf.h

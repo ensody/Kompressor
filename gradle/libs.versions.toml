@@ -4,6 +4,7 @@ coroutines = "1.10.2"
 kotlinxIo = "0.8.2"
 ktor = "3.3.3"
 nativebuilds = "0.7.0"
+brotli = "1.2.0"
 zlib = "1.3.1.4"
 zstd = "1.5.7.4"
 
@@ -22,7 +23,7 @@ kotlin-test-main =  { module = "org.jetbrains.kotlin:kotlin-test" }
 kotlin-test-junit =  { module = "org.jetbrains.kotlin:kotlin-test-junit" }
 ktlint-cli = { module = "com.pinterest.ktlint:ktlint-cli", version = "1.8.0" }
 
-gradle-android = { module = "com.android.tools.build:gradle", version = "8.13.2" }
+gradle-android = { module = "com.android.kotlin.multiplatform.library:com.android.kotlin.multiplatform.library.gradle.plugin", version = "8.13.2" }
 gradle-kotlin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 gradle-cocoapods = { module = "org.jetbrains.kotlin.native.cocoapods:org.jetbrains.kotlin.native.cocoapods.gradle.plugin", version.ref = "kotlin" }
 gradle-dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "2.1.0" }
@@ -30,6 +31,11 @@ gradle-detekt = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", v
 gradle-kotlin-jvm = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
 gradle-maven-publish = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.35.0" }
 gradle-nativebuilds = { module = "com.ensody.nativebuilds:com.ensody.nativebuilds.gradle.plugin", version.ref = "nativebuilds" }
+
+nativebuilds-brotli-common = { module = "com.ensody.nativebuilds:brotli-libbrotlicommon", version.ref = "brotli" }
+nativebuilds-brotli-dec = { module = "com.ensody.nativebuilds:brotli-libbrotlidec", version.ref = "brotli" }
+nativebuilds-brotli-enc = { module = "com.ensody.nativebuilds:brotli-libbrotlienc", version.ref = "brotli" }
+nativebuilds-brotli-headers = { module = "com.ensody.nativebuilds:brotli-headers", version.ref = "brotli" }
 
 nativebuilds-zlib-core = { module = "com.ensody.nativebuilds:zlib-libz", version.ref = "zlib" }
 nativebuilds-zlib-headers = { module = "com.ensody.nativebuilds:zlib-headers", version.ref = "zlib" }

@@ -1,0 +1,8 @@
+package = com.ensody.kompressor.internal.brotli
+headerFilter = brotli/*
+headers = brotli/decode.h brotli/encode.h brotli/types.h
+
+---
+// Kotlin/Native currently can't deal with opaque structs, so inject some fake struct definition
+typedef struct BrotliEncoderStateStruct {} BrotliEncoderState;
+typedef struct BrotliDecoderStateStruct {} BrotliDecoderState;

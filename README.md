@@ -17,7 +17,8 @@ The underlying native libraries are provided by the [NativeBuilds](https://githu
 * zstd/ZStandard
 * deflate (zlib & raw)
 * gzip
-* ...more planned... (lz4, snappy, brotli, bzip2, bzip3)
+* brotli
+* ...more planned... (lz4, snappy, bzip2, bzip3)
 
 ## Installation
 
@@ -41,6 +42,15 @@ dependencies {
     api("com.ensody.nativebuilds:zlib-libz:1.3.1.4")
     // DeflateContentEncoder and GzipContentEncoder for Ktor (optional)
     api("com.ensody.kompressor:kompressor-zlib-ktor")
+
+    // brotli
+    api("com.ensody.kompressor:kompressor-brotli--nativelib")
+    // Select the native brotli library version from NativeBuilds
+    api("com.ensody.nativebuilds:brotli-libbrotlicommon:1.2.0")
+    api("com.ensody.nativebuilds:brotli-libbrotlienc:1.2.0")
+    api("com.ensody.nativebuilds:brotli-libbrotlidec:1.2.0")
+    // BrotliContentEncoder for Ktor (optional)
+    api("com.ensody.kompressor:kompressor-brotli-ktor")
 }
 ```
 
