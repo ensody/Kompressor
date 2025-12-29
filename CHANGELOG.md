@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+* Added Brotli support
+
 ## 0.3.1
 
 * Ensure zlib streams a zero-initialized.
