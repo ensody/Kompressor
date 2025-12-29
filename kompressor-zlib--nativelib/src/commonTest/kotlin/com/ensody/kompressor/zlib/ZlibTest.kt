@@ -51,13 +51,14 @@ internal class ZlibTest {
         val seed = 42
         val size: Long = 256L * 1024 * 1024 + 3
         val reference = RandomSource(Random(seed = seed), size).buffered()
-        val source = RandomSource(Random(seed = seed), size).buffered()
-        source.pipe(ZlibCompressor(ZlibFormat.Zlib)).pipe(ZlibDecompressor())
+        val source = RandomSource(Random(seed = seed), size)
+            .pipe(ZlibCompressor(ZlibFormat.Zlib)).pipe(ZlibDecompressor()).buffered()
         val referenceBlock = ByteArray(8192)
         val sourceBlock = ByteArray(referenceBlock.size)
         do {
             val read = source.readAtMostTo(sourceBlock)
-            assertEquals(reference.readAtMostTo(referenceBlock), read)
+            val endIndex = if (read >= 0) read else referenceBlock.size
+            assertEquals(reference.readAtMostTo(referenceBlock, endIndex = endIndex), read)
             assertContentEquals(referenceBlock, sourceBlock)
         } while (read != -1)
     }
