@@ -7,27 +7,25 @@ pub fn build(b: *std.Build) !void {
     b.getInstallStep().dependOn(&deleteLib.step);
 
     if (builtin.os.tag == .linux or builtin.os.tag == .macos) {
-        try setupTarget(b, &deleteLib.step, .linux, .aarch64, "linuxArm64");
-        try setupTarget(b, &deleteLib.step, .linux, .x86_64, "linuxX64");
+        try setupTarget(b, &deleteLib.step, .linux, .aarch64, .gnu, "linuxArm64");
+        try setupTarget(b, &deleteLib.step, .linux, .x86_64, .gnu, "linuxX64");
     }
     if (builtin.os.tag == .macos) {
-        try setupTarget(b, &deleteLib.step, .macos, .aarch64, "macosArm64");
-        try setupTarget(b, &deleteLib.step, .macos, .x86_64, "macosX64");
+        try setupTarget(b, &deleteLib.step, .macos, .aarch64, null, "macosArm64");
+        try setupTarget(b, &deleteLib.step, .macos, .x86_64, null, "macosX64");
     }
     if (builtin.os.tag == .windows or builtin.os.tag == .macos) {
-        try setupTarget(b, &deleteLib.step, .windows, .x86_64, "mingwX64");
+        try setupTarget(b, &deleteLib.step, .windows, .x86_64, null, "mingwX64");
     }
 }
 
-fn setupTarget(b: *std.Build, step: *std.Build.Step, comptime tag: std.Target.Os.Tag, comptime arch: std.Target.Cpu.Arch, comptime kmpTarget: []const u8) !void {
+fn setupTarget(b: *std.Build, step: *std.Build.Step, comptime tag: std.Target.Os.Tag, comptime arch: std.Target.Cpu.Arch, comptime abi: ?std.Target.Abi, comptime kmpTarget: []const u8) !void {
     const libPrefix = switch (tag) {
         .windows => "lib",
         else => "",
     };
     const libSuffix = "";
-    const lib = b.addLibrary(.{ .name = libPrefix ++ "brotli-jni", .linkage = .dynamic, .root_module = b.createModule(.{
-        .target = b.resolveTargetQuery(.{ .os_tag = tag, .cpu_arch = arch }),
-    }) });
+    const lib = b.addLibrary(.{ .name = libPrefix ++ "brotli-jni", .linkage = .dynamic, .root_module = b.createModule(.{ .target = b.resolveTargetQuery(.{ .os_tag = tag, .cpu_arch = arch, .abi = abi }), .optimize = .ReleaseSmall }) });
 
     lib.root_module.addIncludePath(b.path("../../../jni/include/share"));
     lib.root_module.addIncludePath(b.path("../../../jni/include/" ++ switch (tag) {
