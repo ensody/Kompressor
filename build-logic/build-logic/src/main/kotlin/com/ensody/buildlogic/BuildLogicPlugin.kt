@@ -71,10 +71,12 @@ fun Project.setupBuildLogic(block: Project.() -> Unit) {
                         linuxArm64()
                         linuxX64()
                     }
+
                     OS.Windows -> {
                         jvm()
                         mingwX64()
                     }
+
                     OS.macOS -> {
                         if (project.name.endsWith("--nativelib") || project.name.endsWith("-ktor")) {
                             addAllNonJsTargets()
@@ -96,6 +98,7 @@ fun Project.setupBuildLogic(block: Project.() -> Unit) {
             }
             tasks.register("testAll") {
                 group = "verification"
+                dependsOn("jvmTest")
                 when (OS.current) {
                     OS.Linux -> {
                         when (CpuArch.current) {
@@ -104,6 +107,7 @@ fun Project.setupBuildLogic(block: Project.() -> Unit) {
                                     "linuxArm64Test",
                                 )
                             }
+
                             CpuArch.x64 -> {
                                 dependsOn(
                                     "linuxX64Test",
@@ -111,16 +115,17 @@ fun Project.setupBuildLogic(block: Project.() -> Unit) {
                             }
                         }
                     }
+
                     OS.macOS -> {
                         dependsOn(
                             "testDebugUnitTest",
-                            "jvmTest",
                             "iosSimulatorArm64Test",
                             "iosX64Test",
                             "macosArm64Test",
                             "macosX64Test",
                         )
                     }
+
                     OS.Windows -> {
                         dependsOn(
                             "mingwX64Test",
