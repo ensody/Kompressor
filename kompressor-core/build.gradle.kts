@@ -11,6 +11,9 @@ setupBuildLogic {
         sourceSets.commonMain.dependencies {
             api(libs.coroutines.core)
         }
+        sourceSets["jvmCommonMain"].dependencies {
+            api(libs.nativebuilds.loader)
+        }
         sourceSets.commonTest.dependencies {
             implementation(project(":kompressor-test"))
         }

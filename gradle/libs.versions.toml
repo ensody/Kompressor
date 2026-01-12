@@ -3,7 +3,7 @@ kotlin = "2.2.21"
 coroutines = "1.10.2"
 kotlinxIo = "0.8.2"
 ktor = "3.3.3"
-nativebuilds = "0.7.2"
+nativebuilds = "0.7.3"
 brotli = "1.2.0_1"
 zlib = "1.3.1_5"
 zstd = "1.5.7_5"
@@ -31,6 +31,8 @@ gradle-detekt = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", v
 gradle-kotlin-jvm = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
 gradle-maven-publish = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.35.0" }
 gradle-nativebuilds = { module = "com.ensody.nativebuilds:com.ensody.nativebuilds.gradle.plugin", version.ref = "nativebuilds" }
+
+nativebuilds-loader = { module = "com.ensody.nativebuilds:nativebuilds-loader", version.ref = "nativebuilds" }
 
 nativebuilds-brotli-common = { module = "com.ensody.nativebuilds:brotli-libbrotlicommon", version.ref = "brotli" }
 nativebuilds-brotli-dec = { module = "com.ensody.nativebuilds:brotli-libbrotlidec", version.ref = "brotli" }
