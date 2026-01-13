@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.2
+
+* Fixed watchosArm32 builds
+
 ## 0.4.1
 
 * Fixed JVM Linux builds
