@@ -29,7 +29,7 @@ gradle-cocoapods = { module = "org.jetbrains.kotlin.native.cocoapods:org.jetbrai
 gradle-dokka = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "2.1.0" }
 gradle-detekt = { module = "io.gitlab.arturbosch.detekt:detekt-gradle-plugin", version = "1.23.8" }
 gradle-kotlin-jvm = { module = "org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin", version.ref = "kotlin" }
-gradle-maven-publish = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.35.0" }
+gradle-maven-publish = { module = "com.vanniktech:gradle-maven-publish-plugin", version = "0.36.0" }
 gradle-nativebuilds = { module = "com.ensody.nativebuilds:com.ensody.nativebuilds.gradle.plugin", version.ref = "nativebuilds" }
 
 nativebuilds-loader = { module = "com.ensody.nativebuilds:nativebuilds-loader", version.ref = "nativebuilds" }
