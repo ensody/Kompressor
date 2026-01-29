@@ -27,7 +27,7 @@ setupBuildLogic {
     }
 
     jniNativeBuild(
-        name = "libz-jni",
+        name = "z-jni",
         nativeBuilds = listOf(
             libs.nativebuilds.zlib.headers,
             libs.nativebuilds.zlib.core,

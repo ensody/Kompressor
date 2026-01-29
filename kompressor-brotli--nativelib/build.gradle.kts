@@ -29,7 +29,7 @@ setupBuildLogic {
     }
 
     jniNativeBuild(
-        name = "libbrotli-jni",
+        name = "brotli-jni",
         nativeBuilds = listOf(
             libs.nativebuilds.brotli.headers,
             libs.nativebuilds.brotli.common,

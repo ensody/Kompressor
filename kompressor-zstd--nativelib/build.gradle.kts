@@ -27,7 +27,7 @@ setupBuildLogic {
     }
 
     jniNativeBuild(
-        name = "libzstd-jni",
+        name = "zstd-jni",
         nativeBuilds = listOf(
             libs.nativebuilds.zstd.headers,
             libs.nativebuilds.zstd.core,

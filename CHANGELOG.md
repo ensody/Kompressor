@@ -1,17 +1,31 @@
 # Changelog
 
+## 0.4.5
+
+* Fixed Android bundling duplicate .so files from NativeBuilds.
+* Fixed Android JNI loading.
+* Bump NativeBuilds 0.8.4.
+
+## 0.4.4
+
+* Bump NativeBuilds 0.8.1.
+
+## 0.4.3
+
+* Simplified JNI cross-compilation via new NativeBuilds plugin.
+
 ## 0.4.2
 
-* Fixed watchosArm32 builds
+* Fixed watchosArm32 builds.
 
 ## 0.4.1
 
-* Fixed JVM Linux builds
-* Fixed zlib loading in JVM on Windows
+* Fixed JVM Linux builds.
+* Fixed zlib loading in JVM on Windows.
 
 ## 0.4.0
 
-* Added Brotli support
+* Added Brotli support.
 
 ## 0.3.1
 
