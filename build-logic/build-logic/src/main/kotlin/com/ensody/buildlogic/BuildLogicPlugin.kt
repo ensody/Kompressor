@@ -54,7 +54,7 @@ fun Project.setupRepositories() {
     }
 }
 
-fun Project.setupBuildLogic(block: Project.() -> Unit) {
+fun Project.setupBuildLogic(includeDefaultTargets: Boolean = true, block: Project.() -> Unit) {
     setupBuildLogicBase {
         setupRepositories()
         if (extensions.findByType<JavaPlatformExtension>() != null) {
@@ -65,23 +65,25 @@ fun Project.setupBuildLogic(block: Project.() -> Unit) {
         }
         if (extensions.findByType<KotlinMultiplatformExtension>() != null) {
             setupKmp {
-                when (OS.current) {
-                    OS.Linux -> {
-                        jvm()
-                        linuxArm64()
-                        linuxX64()
-                    }
+                if (includeDefaultTargets) {
+                    when (OS.current) {
+                        OS.Linux -> {
+                            jvm()
+                            linuxArm64()
+                            linuxX64()
+                        }
 
-                    OS.Windows -> {
-                        jvm()
-                        mingwX64()
-                    }
+                        OS.Windows -> {
+                            jvm()
+                            mingwX64()
+                        }
 
-                    OS.macOS -> {
-                        if (project.name.endsWith("--nativelib") || project.name.endsWith("-ktor")) {
-                            addAllNonJsTargets()
-                        } else {
-                            addAllTargets()
+                        OS.macOS -> {
+                            if (project.name.endsWith("--nativelib") || project.name.endsWith("-ktor")) {
+                                addAllNonJsTargets()
+                            } else {
+                                addAllTargets()
+                            }
                         }
                     }
                 }
@@ -91,14 +93,18 @@ fun Project.setupBuildLogic(block: Project.() -> Unit) {
                     optIn.add("kotlinx.coroutines.FlowPreview")
                 }
 
-                sourceSets["jvmCommonTest"].dependencies {
-                    implementation(rootLibs.findLibrary("kotlin-test-junit").get())
-                    implementation(rootLibs.findLibrary("junit").get())
+                if (includeDefaultTargets) {
+                    sourceSets["jvmCommonTest"].dependencies {
+                        implementation(rootLibs.findLibrary("kotlin-test-junit").get())
+                        implementation(rootLibs.findLibrary("junit").get())
+                    }
                 }
             }
             tasks.register("testAll") {
                 group = "verification"
-                dependsOn("jvmTest")
+                if (includeDefaultTargets) {
+                    dependsOn("jvmTest")
+                }
                 when (OS.current) {
                     OS.Linux -> {
                         when (CpuArch.current) {
