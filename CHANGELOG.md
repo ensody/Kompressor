@@ -2,8 +2,6 @@
 
 ## Unreleased
 
-### Added
-
 - Added `kompressor-js` module providing support for JS and WasmJS targets using the browser's Compression Streams API.
 - Added `ExperimentalCompressionFormat` annotation to mark formats that might not be supported on all platforms.
 
