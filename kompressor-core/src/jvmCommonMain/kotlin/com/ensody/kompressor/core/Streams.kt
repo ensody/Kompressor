@@ -63,7 +63,6 @@ private class InputStreamTransform(val streamFactory: (InputStream) -> InputStre
         }
         streamFrom = input
 
-
         val result = try {
             inputStream.read(output.data, output.writeStart, output.remainingWrite)
         } catch (_: NeedsMoreInputException) {
