@@ -75,6 +75,16 @@ public class ByteArraySlice(
         other.writeStart += size
     }
 
+    public fun readInto(dest: ByteArray, destOffset: Int, size: Int = remainingRead) {
+        check(size >= 0) { "size must not be negative" }
+        check(size <= remainingRead) { "size is larger than input slice" }
+        val destEnd = destOffset + size
+        check(destEnd <= dest.size) { "size + destOffset is larger than output size" }
+        val endExclusive = readStart + size
+        data.copyInto(dest, destOffset, readStart, endExclusive)
+        readStart = endExclusive
+    }
+
     override fun toString(): String =
         "ByteArraySlice(remainingRead=$remainingRead, insufficient=$insufficient)"
 }
