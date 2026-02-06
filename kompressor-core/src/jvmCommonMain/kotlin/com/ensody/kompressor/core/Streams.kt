@@ -93,13 +93,13 @@ private class OutputStreamTransform(val streamFactory: (OutputStream) -> OutputS
     ) {
         // Initialize stream on first call - must set output BEFORE creating wrapped stream
         // because some streams (like GZIPOutputStream) write header data during construction
-        if (sliceOutputStream == null) {
-            sliceOutputStream = SliceOutputStream()
-            sliceOutputStream!!.setOutput(output)
-            internalOutputStream = streamFactory(sliceOutputStream!!)
+        val sliceOut = sliceOutputStream ?: run {
+            val stream = SliceOutputStream()
+            sliceOutputStream = stream
+            stream.setOutput(output)
+            internalOutputStream = streamFactory(stream)
+            stream
         }
-
-        val sliceOut = sliceOutputStream!!
 
         // Set the current output slice for direct writing
         sliceOut.setOutput(output)
@@ -112,12 +112,12 @@ private class OutputStreamTransform(val streamFactory: (OutputStream) -> OutputS
             val readRemaining = input.remainingRead
             val readStart = input.readStart
             input.readStart += readRemaining
-            internalOutputStream!!.write(input.data, readStart, readRemaining)
+            internalOutputStream?.write(input.data, readStart, readRemaining)
         }
 
         // Close the stream when finishing (to flush all compressed data)
         if (finish && !closed && !sliceOut.hasBufferedData()) {
-            internalOutputStream!!.close()
+            internalOutputStream?.close()
             closed = true
             // Drain any data that was written during close/flush
             sliceOut.drainBuffer()
@@ -196,33 +196,31 @@ private class SliceOutputStream : OutputStream() {
     }
 
     private fun appendToBuffer(b: ByteArray, off: Int, len: Int) {
-        if (overflowBuffer == null) {
-            overflowBuffer = ByteArray(kotlin.math.max(8192, len))
+        val original = overflowBuffer ?: ByteArray(kotlin.math.max(8192, len)).also {
+            overflowBuffer = it
         }
-
-        val buf = overflowBuffer!!
         val currentSize = overflowEnd - overflowStart
 
         // Check if we need to compact or grow the buffer
-        if (overflowEnd + len > buf.size) {
+        if (overflowEnd + len > original.size) {
             if (overflowStart > 0) {
                 // Compact: move data to beginning
-                buf.copyInto(buf, 0, overflowStart, overflowEnd)
+                original.copyInto(original, 0, overflowStart, overflowEnd)
                 overflowEnd = currentSize
                 overflowStart = 0
             }
-            if (overflowEnd + len > buf.size) {
+            if (overflowEnd + len > original.size) {
                 // Grow buffer
-                val newSize = kotlin.math.max(buf.size * 2, currentSize + len)
+                val newSize = kotlin.math.max(original.size * 2, currentSize + len)
                 val newBuf = ByteArray(newSize)
-                buf.copyInto(newBuf, 0, overflowStart, overflowEnd)
+                original.copyInto(newBuf, 0, overflowStart, overflowEnd)
                 overflowBuffer = newBuf
                 overflowEnd = currentSize
                 overflowStart = 0
             }
         }
 
-        b.copyInto(overflowBuffer!!, overflowEnd, off, off + len)
+        b.copyInto(overflowBuffer ?: error("Overflow buffer not initialized"), overflowEnd, off, off + len)
         overflowEnd += len
     }
 }
