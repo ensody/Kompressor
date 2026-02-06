@@ -1,4 +1,4 @@
-@file:OptIn(kotlin.js.ExperimentalWasmJsInterop::class)
+@file:OptIn(ExperimentalWasmJsInterop::class)
 
 package com.ensody.kompressor.js
 
@@ -39,11 +39,9 @@ internal class JsCompressionInteropImpl(
         cancel(reader).await<JsAny?>()
     }
 
-    override suspend fun awaitReady() {
+    override suspend fun awaitWriteReady() {
         getReady(writer).await<JsAny?>()
     }
-
-
 }
 
 internal fun ByteArray.toJsUint8Array(offset: Int = 0, length: Int = this.size): Uint8Array {

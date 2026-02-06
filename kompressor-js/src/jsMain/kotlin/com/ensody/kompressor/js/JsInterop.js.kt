@@ -4,11 +4,13 @@ import kotlinx.coroutines.await
 import org.khronos.webgl.Uint8Array
 import kotlin.js.Promise
 
+@Suppress("unused", "UnusedVariable")
 internal fun ByteArray.toJsUint8Array(offset: Int = 0, length: Int = this.size): Uint8Array {
     val self = this
     return js("new Uint8Array(self.buffer, self.byteOffset + offset, length)")
 }
 
+@Suppress("unused", "UnusedVariable")
 internal fun Uint8Array.toByteArray(): ByteArray {
     val self = this
     return js("new Int8Array(self.buffer, self.byteOffset, self.length)")
@@ -46,7 +48,7 @@ internal class JsCompressionInteropImpl(
         (reader.asDynamic().cancel() as Promise<Unit>).await()
     }
 
-    override suspend fun awaitReady() {
+    override suspend fun awaitWriteReady() {
         (writer.asDynamic().ready as Promise<Unit>).await()
     }
 }
