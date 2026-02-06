@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
+
 /**
  * An asynchronous data [SliceTransform], using a `suspend` [transform] function.
  *
@@ -49,7 +50,7 @@ public suspend fun AsyncSliceTransform.transform(input: ByteArray): ByteArray {
         if (outputSlice.insufficient) {
             outputSlices.add(ByteArraySlice(8192))
         }
-    } while (inputSlice.remainingRead != 0 || outputSlices.last().insufficient)
+    } while (inputSlice.remainingRead != 0 || outputSlice.insufficient)
     return outputSlices.getOutput()
 }
 

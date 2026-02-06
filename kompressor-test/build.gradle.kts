@@ -1,3 +1,4 @@
+import com.ensody.buildlogic.allJs
 import com.ensody.buildlogic.setupBuildLogic
 
 plugins {
@@ -8,6 +9,7 @@ plugins {
 
 setupBuildLogic {
     kotlin {
+        allJs()
         sourceSets.commonMain.dependencies {
             api(libs.coroutines.core)
             api(project(":kompressor-core"))

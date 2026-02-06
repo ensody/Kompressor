@@ -1,5 +1,6 @@
 package com.ensody.kompressor.kotlinx.io
 
+import com.ensody.kompressor.core.AsyncSliceTransform
 import com.ensody.kompressor.core.ByteArraySlice
 import com.ensody.kompressor.core.SliceTransform
 import kotlinx.io.Buffer
@@ -175,6 +176,43 @@ public fun UnsafeBufferOperations.saferMoveToTail(
         moveToTail(buffer, bytes, startIndex, endIndex)
     }
     return length
+}
+
+@OptIn(UnsafeIoApi::class, DelicateIoApi::class)
+public suspend fun AsyncSliceTransform.transform(input: ByteArraySlice, sink: Sink, finish: Boolean): Boolean =
+    sink.writeToInternalBufferReturning {
+        val tracker = BufferTracker(it)
+        transform(input, tracker, finish)
+        tracker.insufficient
+    }
+
+@OptIn(UnsafeIoApi::class, DelicateIoApi::class)
+public suspend fun AsyncSliceTransform.transform(input: ByteArraySlice, sink: BufferTracker, finish: Boolean) {
+    // We first try to write into the smallest possible segment in order to avoid lots of unused
+    // capacity in the sink Buffer's Segments. If the space is insufficient we retry with a large
+    // Segment, so we can guarantee progress.
+    var outputInsufficient = false
+    do {
+        val minCapacity = if (outputInsufficient) 4096 else 64
+        UnsafeBufferOperations.writeToTail(sink.buffer, minCapacity) { outBytes, outStart, outEndExclusive ->
+            val output = ByteArraySlice(outBytes, outStart, outStart, outEndExclusive)
+            transform(input, output, finish = finish)
+            (output.writeStart - outStart).also {
+                // This ensures that we only retry once
+                outputInsufficient = !outputInsufficient && output.insufficient
+                sink.processed += it
+                sink.insufficient = output.insufficient
+            }
+        }
+    } while (outputInsufficient)
+}
+
+public suspend fun AsyncSliceTransform.transform(input: Buffer, sink: Sink) {
+    val helper = AsyncBufferSliceTransformHelper(this)
+    while (!input.exhausted()) {
+        helper.transform(input, sink, input.size.toInt(), finish = false)
+    }
+    helper.finishInto(sink)
 }
 
 public val emptyByteArray: ByteArray = ByteArray(0)
