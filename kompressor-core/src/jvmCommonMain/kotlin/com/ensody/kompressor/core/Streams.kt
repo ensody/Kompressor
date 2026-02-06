@@ -1,6 +1,6 @@
 package com.ensody.kompressor.core
 
-import java.io.ByteArrayInputStream
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import kotlin.math.min
@@ -11,27 +11,72 @@ public fun StreamDecompressor(streamFactory: (InputStream) -> InputStream): Slic
 public fun StreamCompressor(streamFactory: (OutputStream) -> OutputStream): SliceTransform =
     OutputStreamTransform(streamFactory)
 
+private class NeedsMoreInputException : IOException()
+
 private class InputStreamTransform(val streamFactory: (InputStream) -> InputStream) : SliceTransform {
-    private lateinit var internalInputStream: InputStream
+    private lateinit var streamFrom: ByteArraySlice
+    private var finishing = false
+
+    // some streams like to read on initialization, so we need to make sure streamFrom is set first
+    private val inputStream by lazy {
+        streamFactory(
+            object : InputStream() {
+                override fun read(): Int {
+                    if (streamFrom.remainingRead == 0) {
+                        if (finishing) return -1
+                        throw NeedsMoreInputException()
+                    }
+                    return streamFrom.data[streamFrom.readStart++].toInt() and 0xFF
+                }
+
+                override fun read(b: ByteArray, off: Int, len: Int): Int {
+                    if (streamFrom.remainingRead == 0) {
+                        if (finishing) return -1
+                        throw NeedsMoreInputException()
+                    }
+                    val toRead = min(min(len, streamFrom.remainingRead), b.size - off)
+                    streamFrom.readInto(b, off, toRead)
+                    return toRead
+                }
+
+                override fun skip(n: Long): Long {
+                    val toSkip = min(n, streamFrom.remainingRead.toLong()).toInt()
+                    streamFrom.readStart += toSkip
+                    return toSkip.toLong()
+                }
+
+                override fun available(): Int {
+                    return streamFrom.remainingRead
+                }
+            },
+        )
+    }
 
     override fun transform(
         input: ByteArraySlice,
         output: ByteArraySlice,
         finish: Boolean,
     ) {
-        if (!::internalInputStream.isInitialized) {
-            val inputStream = ByteArrayInputStream(input.data, input.readStart, input.remainingRead)
-            input.readStart += input.remainingRead
-            internalInputStream = streamFactory(inputStream)
+        this.finishing = finish
+        if (!input.hasData && !finish) {
+            return
         }
+        streamFrom = input
 
-        val result = internalInputStream.read(output.data, output.writeStart, output.remainingWrite)
+
+        val result = try {
+            inputStream.read(output.data, output.writeStart, output.remainingWrite)
+        } catch (_: NeedsMoreInputException) {
+            output.insufficient = true
+            return
+        }
         if (result == -1) {
+            // eof
             output.insufficient = false
         } else {
             output.writeStart += result
             // Stream may have more data even if result < remainingWrite
-            output.insufficient = true
+            output.insufficient = inputStream.available() > 0
         }
     }
 }
