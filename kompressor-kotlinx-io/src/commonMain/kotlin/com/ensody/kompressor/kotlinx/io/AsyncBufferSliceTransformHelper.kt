@@ -9,7 +9,7 @@ import kotlinx.io.UnsafeIoApi
 import kotlinx.io.unsafe.UnsafeBufferOperations
 import kotlin.math.min
 
-public class AsyncBufferSliceTransformHelper(
+internal class AsyncBufferSliceTransformHelper(
     private val transform: AsyncSliceTransform,
 ) {
     private val inputBuffer = ByteArraySlice(16 * 1024)
@@ -18,7 +18,7 @@ public class AsyncBufferSliceTransformHelper(
      * Transforms from source into sink and returns the number of bytes read from source.
      */
     @OptIn(UnsafeIoApi::class)
-    public suspend fun transform(source: Buffer, sink: BufferTracker, readLimit: Int, finish: Boolean): Int =
+    suspend fun transform(source: Buffer, sink: BufferTracker, readLimit: Int, finish: Boolean): Int =
         UnsafeBufferOperations.saferReadFromHead(source) { inBytes, inStart, inEndExclusive ->
             val maxReadSize = min(readLimit, inEndExclusive - inStart)
             val inputSegment = ByteArraySlice(inBytes, inStart, inStart + maxReadSize)
@@ -37,13 +37,13 @@ public class AsyncBufferSliceTransformHelper(
         }
 
     @OptIn(DelicateIoApi::class)
-    public suspend fun transform(source: Buffer, sink: Sink, readLimit: Int, finish: Boolean): Int =
+    suspend fun transform(source: Buffer, sink: Sink, readLimit: Int, finish: Boolean): Int =
         sink.writeToInternalBufferReturning {
             transform(source, BufferTracker(it), readLimit, finish)
         }
 
     @OptIn(DelicateIoApi::class)
-    public suspend fun finishInto(sink: Sink) {
+    suspend fun finishInto(sink: Sink) {
         sink.writeToInternalBufferReturning {
             val tracker = BufferTracker(it)
             do {

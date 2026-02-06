@@ -207,4 +207,12 @@ public suspend fun AsyncSliceTransform.transform(input: ByteArraySlice, sink: Bu
     } while (outputInsufficient)
 }
 
+public suspend fun AsyncSliceTransform.transform(input: Buffer, sink: Sink) {
+    val helper = AsyncBufferSliceTransformHelper(this)
+    while (!input.exhausted()) {
+        helper.transform(input, sink, input.size.toInt(), finish = false)
+    }
+    helper.finishInto(sink)
+}
+
 public val emptyByteArray: ByteArray = ByteArray(0)

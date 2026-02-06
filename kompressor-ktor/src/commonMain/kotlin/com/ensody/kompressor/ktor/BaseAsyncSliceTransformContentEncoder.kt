@@ -1,7 +1,7 @@
 package com.ensody.kompressor.ktor
 
 import com.ensody.kompressor.core.AsyncSliceTransform
-import com.ensody.kompressor.kotlinx.io.AsyncBufferSliceTransformHelper
+import com.ensody.kompressor.kotlinx.io.transform
 import io.ktor.util.ContentEncoder
 import io.ktor.utils.io.ByteReadChannel
 import io.ktor.utils.io.ByteWriteChannel
@@ -30,7 +30,7 @@ public abstract class BaseAsyncSliceTransformContentEncoder(
         source: ByteReadChannel,
         coroutineContext: CoroutineContext,
     ): ByteReadChannel = CoroutineScope(coroutineContext).writer(dispatcher) {
-        val helper = AsyncBufferSliceTransformHelper(decompressor())
+        val compressor = decompressor()
         val input = Buffer()
         val sink = channel.asSink() as Sink
         try {
@@ -38,11 +38,8 @@ public abstract class BaseAsyncSliceTransformContentEncoder(
                 val packet = source.readRemaining(8192)
                 if (packet.exhausted()) break
                 input.write(packet.readByteArray())
-                while (!input.exhausted()) {
-                    helper.transform(input, sink, input.size.toInt(), finish = false)
-                }
+                compressor.transform(input, sink)
             }
-            helper.finishInto(sink)
         } finally {
             sink.close()
         }
@@ -52,7 +49,7 @@ public abstract class BaseAsyncSliceTransformContentEncoder(
         source: ByteReadChannel,
         coroutineContext: CoroutineContext,
     ): ByteReadChannel = CoroutineScope(coroutineContext).writer(dispatcher) {
-        val helper = AsyncBufferSliceTransformHelper(compressor())
+        val compressor = compressor()
         val input = Buffer()
         val sink = channel.asSink() as Sink
         try {
@@ -60,11 +57,8 @@ public abstract class BaseAsyncSliceTransformContentEncoder(
                 val packet = source.readRemaining(8192)
                 if (packet.exhausted()) break
                 input.write(packet.readByteArray())
-                while (!input.exhausted()) {
-                    helper.transform(input, sink, input.size.toInt(), finish = false)
-                }
+                compressor.transform(input, sink)
             }
-            helper.finishInto(sink)
         } finally {
             sink.close()
         }
@@ -74,18 +68,15 @@ public abstract class BaseAsyncSliceTransformContentEncoder(
         source: ByteWriteChannel,
         coroutineContext: CoroutineContext,
     ): ByteWriteChannel = CoroutineScope(coroutineContext).reader(dispatcher) {
-        val helper = AsyncBufferSliceTransformHelper(compressor())
+        val compressor = compressor()
         val input = (channel.asSource() as Source).buffered()
         val sink = source.asSink() as Sink
         val buffer = Buffer()
         try {
             while (true) {
                 if (input.readAtMostTo(buffer, 8192) == -1L) break
-                while (!buffer.exhausted()) {
-                    helper.transform(buffer, sink, buffer.size.toInt(), finish = false)
-                }
+                compressor.transform(buffer, sink)
             }
-            helper.finishInto(sink)
         } finally {
             sink.close()
         }

@@ -3,8 +3,10 @@ package com.ensody.kompressor.kotlinx.io
 import com.ensody.kompressor.core.AsyncSliceTransform
 import com.ensody.kompressor.core.ByteArraySlice
 import com.ensody.kompressor.core.transform
+import com.ensody.kompressor.test.RandomSource
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.Buffer
+import kotlinx.io.buffered
 import kotlinx.io.readByteArray
 import kotlin.experimental.xor
 import kotlin.math.min
@@ -103,6 +105,28 @@ internal class AsyncXorSliceTransformTest {
         decompressorHelper.finishInto(decompressedBuffer)
 
         assertContentEquals(testData, decompressedBuffer.readByteArray())
+    }
+
+    @Test
+    fun transformBufferToSink() = runTest {
+        val output = Buffer()
+        xorAsyncSliceTransform.transform(input, output)
+        assertContentEquals(transformedData, output.readByteArray())
+    }
+
+    @Test
+    fun transformRandomSourceToSink() = runTest {
+        val seed = 1234L
+        val size = 16 * 1024L + 7
+        val source = RandomSource(Random(seed), size).buffered()
+        val referenceBuffer = Buffer().apply { source.readTo(this, size) }
+        val referenceData = referenceBuffer.readByteArray()
+        val expectedData = referenceData.map { it.xor(xorByte) }.toByteArray()
+
+        val input = Buffer().apply { RandomSource(Random(seed), size).buffered().readTo(this, size) }
+        val output = Buffer()
+        xorAsyncSliceTransform.transform(input, output)
+        assertContentEquals(expectedData, output.readByteArray())
     }
 }
 
