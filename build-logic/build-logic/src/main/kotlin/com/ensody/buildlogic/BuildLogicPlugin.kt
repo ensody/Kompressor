@@ -69,7 +69,8 @@ fun Project.setupBuildLogic(includeDefaultTargets: Boolean = true, block: Projec
                 if (includeDefaultTargets) {
                     when (OS.current) {
                         OS.Linux -> {
-                            androidTarget()jvm()
+                            androidTarget()
+                            jvm()
                             linuxArm64()
                             linuxX64()
                         }
@@ -80,7 +81,7 @@ fun Project.setupBuildLogic(includeDefaultTargets: Boolean = true, block: Projec
                         }
 
                         OS.macOS -> {
-                            if (project.name.endsWith("--nativelib") || project.name.endsWith("-ktor")) {
+                            if (project.name.endsWith("--nativelib")) {
                                 addAllNonJsTargets()
                             } else {
                                 addAllTargets()
