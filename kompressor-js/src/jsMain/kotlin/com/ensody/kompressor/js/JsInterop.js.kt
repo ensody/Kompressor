@@ -39,17 +39,28 @@ internal class JsCompressionInteropImpl(
         (writer.asDynamic().close() as Promise<Unit>).await()
     }
 
-    override suspend fun read(): ByteArray? {
-        val result = (reader.asDynamic().read() as Promise<dynamic>).await()
-        return if (result.done as Boolean) null else (result.value as Uint8Array).toByteArray()
+    override fun read(): Promise<ReadResult> {
+        return (reader.asDynamic().read() as Promise<ReadResult>)
+    }
+
+    @Suppress("UnusedVariable", "unused")
+    override suspend fun getIfResolved(read: Promise<ReadResult>): ReadResult? {
+        val timeoutPromise = js(
+            """
+            new Promise(function(resolve) {
+                queueMicrotask(function() { resolve(null); });
+            })
+        """,
+        ) as Promise<ReadResult?>
+        return (js("Promise.race([read, timeoutPromise])") as Promise<ReadResult?>).await()
     }
 
     override suspend fun cancel() {
         (reader.asDynamic().cancel() as Promise<Unit>).await()
     }
 
-    override suspend fun awaitWriteReady() {
-        (writer.asDynamic().ready as Promise<Unit>).await()
+    override suspend fun abort() {
+        (writer.asDynamic().abort() as Promise<Unit>).await()
     }
 }
 
@@ -64,3 +75,14 @@ internal external class WritableStreamDefaultWriter
 
 internal actual fun createJsCompressionInterop(format: String, isCompression: Boolean): JsCompressionInterop =
     JsCompressionInteropImpl(format, isCompression)
+
+@Suppress("UnusedVariable", "unused")
+internal actual fun ReadResult.bytesOrNull(): ByteArray? {
+    val self = this
+    return if (done) null else (js("self.value") as Uint8Array?)?.toByteArray()
+}
+
+@OptIn(markerClass = [ExperimentalWasmJsInterop::class])
+internal actual suspend fun <T> Promise<T>.await(): T {
+    return this.await()
+}

@@ -2,33 +2,16 @@ package com.ensody.kompressor.js
 
 import com.ensody.kompressor.core.AsyncSliceTransform
 import com.ensody.kompressor.core.ByteArraySlice
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlin.math.min
+import kotlinx.coroutines.yield
+import kotlin.js.ExperimentalWasmJsInterop
+import kotlin.js.Promise
 
-/**
- * JS Compression Stream transform implementation.
- *
- * ## Algorithm
- *
- * The JS Streams API's `write()` Promise only resolves once the internal queue has space.
- * To avoid blocking, we use `desiredSize` which indicates how many bytes can be written
- * without the write Promise blocking.
- *
- * ### When `finish=false`:
- * - Buffer input data (don't need to consume all - caller will call again)
- * - No stream operations yet - we accumulate until finish
- *
- * ### When `finish=true`:
- * - Write buffered input to stream, respecting `desiredSize` to avoid blocking
- * - Read available output chunks
- * - If more work remains (input to write or output to read), set `insufficient=true`
- * - Close writer when all input is written
- * - Done when reader returns null (stream closed)
- *
- * This approach requires no background coroutines - all operations complete within
- * a single `transform` call by interleaving small writes and reads.
- */
+@OptIn(ExperimentalWasmJsInterop::class)
 internal class JsCompressionSliceTransform(
     format: String,
     isCompression: Boolean,
@@ -38,58 +21,88 @@ internal class JsCompressionSliceTransform(
     private var writerClosed = false
     private var readerDone = false
 
+    // a read promise from the last call that didn't resolve, since there wasn't enough input
+    private var pendingRead: Promise<ReadResult>? = null
+
     // Buffer for output chunks that couldn't fit in the output slice
     private var pendingOutput: ByteArraySlice? = null
 
+    @OptIn(ExperimentalWasmJsInterop::class)
     override suspend fun transform(input: ByteArraySlice, output: ByteArraySlice, finish: Boolean) {
-        // First drain any pending output from previous call
-        val pending = pendingOutput
-        if (pending != null) {
-            if (!writeSliceToOutput(pending, output)) {
-                return
-            }
-        }
-
-        if (input.remainingRead > 0 && interop.desiredSize > 0) {
-            val toWrite = min(input.remainingRead, interop.desiredSize)
-            interop.write(input.data, input.readStart, toWrite)
-            input.readStart += toWrite
-        }
-
-        // When finish=false, we just buffer input - no reads yet (would block)
-        if (!finish) {
-            return
-        }
-
-        // finish=true: now we flush and read output
-        coroutineScope {
-            // close will block until all output is read - we join this job after reading
-            val closeJob = if (input.remainingRead == 0 && pendingOutput == null && !writerClosed) {
-                launch {
-                    interop.close()
-                    writerClosed = true
+        try {
+            // First drain any pending output from previous call
+            val pending = pendingOutput
+            if (pending != null) {
+                if (!writeSliceToOutput(pending, output)) {
+                    return
                 }
-            } else {
-                null
             }
 
-            // Read all output
-            if (!readerDone) {
-                val chunk = interop.read()
-                if (chunk == null) {
-                    readerDone = true
-                } else {
-                    if (!writeChunkToOutput(chunk, output)) {
-                        return@coroutineScope
+            coroutineScope {
+                val writerJob = if (input.remainingRead > 0 && interop.hasRoom) {
+                    val toWrite = input.remainingRead
+                    launch(start = CoroutineStart.UNDISPATCHED) {
+                        interop.write(input.data, input.readStart, toWrite)
+                        input.readStart += toWrite
                     }
+                } else {
+                    null
                 }
+
+                val closeJob = if (pendingOutput == null && !writerClosed && finish) {
+                    launch(start = CoroutineStart.UNDISPATCHED) {
+                        writerJob?.join()
+                        if (input.remainingRead == 0) {
+                            interop.close()
+                            writerClosed = true
+                        }
+                    }
+                } else {
+                    null
+                }
+
+                // Read all output that is available
+                while (!readerDone && currentCoroutineContext().isActive) {
+                    val readPromise = pendingRead ?: interop.read()
+                    val result: ReadResult =
+                        if (finish) {
+                            readPromise.await()
+                        } else {
+                            interop.getIfResolved(readPromise) ?: run {
+                                pendingRead = readPromise
+                                input.insufficient = true
+                                break
+                            }
+                        }
+
+                    pendingRead = null
+                    input.insufficient = false
+
+                    val chunk = result.bytesOrNull()
+                    if (chunk == null) {
+                        readerDone = true
+                        if (pendingOutput == null) {
+                            output.insufficient = false
+                        }
+                        break
+                    } else {
+                        if (!writeChunkToOutput(chunk, output)) {
+                            writerJob?.join()
+                            closeJob?.join()
+                            return@coroutineScope
+                        }
+                    }
+
+                    yield()
+                }
+
+                writerJob?.join()
+
+                closeJob?.join()
             }
-
-            closeJob?.join()
-
-            // Determine if we need more calls
-            val moreWork = !readerDone || pendingOutput != null
-            output.insufficient = moreWork
+        } catch (e: Throwable) {
+            interop.abort()
+            throw e
         }
     }
 
