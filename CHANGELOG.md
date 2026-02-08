@@ -5,6 +5,12 @@
 * Added `StreamCompressor`/`StreamDecompressor` on JVM for wrapping Java IO streams, such as those from Apache Commons
   Compress.
 
+## 0.4.6
+
+* Fixed incorrect JNI lib name on Android.
+* CI: Run tests on Android emulator to prevent this bug from happening again.
+* Bump NativeBuilds 0.9.0 which allows fully overriding the JNI loading logic.
+
 ## 0.4.5
 
 * Fixed Android bundling duplicate .so files from NativeBuilds.

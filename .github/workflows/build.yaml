@@ -40,6 +40,13 @@ jobs:
         run: ./gradlew assemble --stacktrace
       - name: Run tests
         run: ./gradlew testAll --stacktrace
+      - name: Android emulator tests
+        uses: reactivecircus/android-emulator-runner@b530d96654c385303d652368551fb075bc2f0b6b # v2.35.0
+        if: runner.os == 'Linux'
+        with:
+          api-level: 36
+          arch: x86_64
+          script: ./gradlew connectedDebugAndroidTest --stacktrace
 
   build:
     name: Build and test

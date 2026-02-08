@@ -3,7 +3,7 @@ kotlin = "2.2.21"
 coroutines = "1.10.2"
 kotlinxIo = "0.8.2"
 ktor = "3.3.3"
-nativebuilds = "0.8.4"
+nativebuilds = "0.9.0"
 brotli = "1.2.0_4"
 zlib = "1.3.1.8"
 zstd = "1.5.7.8"
@@ -17,6 +17,7 @@ kotlinx-io = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "
 
 ktor-utils = { module = "io.ktor:ktor-utils", version.ref = "ktor" }
 
+androidx-test-runner = { module = "androidx.test:runner", version = "1.7.0" }
 desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
 junit = { module = "junit:junit", version = "4.13.2" }
 kotlin-test-main =  { module = "org.jetbrains.kotlin:kotlin-test" }
