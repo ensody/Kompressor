@@ -40,6 +40,20 @@ jobs:
         run: ./gradlew assemble --stacktrace
       - name: Run tests
         run: ./gradlew testAll --stacktrace
+      - name: Android emulator tests
+        uses: reactivecircus/android-emulator-runner@b530d96654c385303d652368551fb075bc2f0b6b # v2.35.0
+        if: runner.os == 'Linux'
+        with:
+          api-level: 36
+          arch: x86_64
+          script: ./gradlew connectedDebugAndroidTest --stacktrace
+      - name: Upload the build report
+        if: failure()
+        uses: actions/upload-artifact@master
+        with:
+          name: build-report-${{ runner.os }}
+          path: |
+            **/build/reports/
 
   build:
     name: Build and test
@@ -88,12 +102,10 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY_RING }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
 
-      - name: Bundle the build report
-        if: failure()
-        run: find . -type d -name 'reports' | zip -@ -r build-report.zip
       - name: Upload the build report
         if: failure()
         uses: actions/upload-artifact@master
         with:
-          name: build-report
-          path: build-report.zip
+          name: build-report-${{ runner.os }}
+          path: |
+            **/build/reports/

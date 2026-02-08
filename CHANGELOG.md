@@ -1,9 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.4.6
 
-- Added `kompressor-js` module providing support for JS and WasmJS targets using the browser's Compression Streams API.
-- Added `ExperimentalCompressionFormat` annotation to mark formats that might not be supported on all platforms.
+* Fixed incorrect JNI lib name on Android.
+* CI: Run tests on Android emulator to prevent this bug from happening again.
+* Bump NativeBuilds 0.9.0 which allows fully overriding the JNI loading logic.
+*Added `kompressor-js` module providing support for JS and WasmJS targets using the browser's Compression Streams API.
+*Added `ExperimentalCompressionFormat` annotation to mark formats that might not be supported on all platforms.
 
 ## 0.4.5
 

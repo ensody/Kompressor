@@ -50,6 +50,7 @@ fun Project.setupAndroid(
                 pickFirsts.add("META-INF/*.kotlin_module")
                 pickFirsts.add("META-INF/AL2.0")
                 pickFirsts.add("META-INF/LGPL2.1")
+                pickFirsts.add("META-INF/nativebuild.json")
             }
         }
     }
