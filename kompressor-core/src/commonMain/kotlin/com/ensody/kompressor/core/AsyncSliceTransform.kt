@@ -4,7 +4,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.CoroutineContext
 
-
 /**
  * An asynchronous data [SliceTransform], using a `suspend` [transform] function.
  *
