@@ -2,12 +2,16 @@ package com.ensody.kompressor.js
 
 import com.ensody.kompressor.core.AsyncSliceTransform
 import com.ensody.kompressor.core.ByteArraySlice
+import com.ensody.kompressor.core.createCleaner
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
+import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.Promise
 
@@ -17,6 +21,20 @@ internal class JsCompressionSliceTransform(
     isCompression: Boolean,
 ) : AsyncSliceTransform {
     private val interop = createJsCompressionInterop(format, isCompression)
+    private val cleanedUp = AtomicBoolean(false)
+
+    init {
+        val interop = this.interop
+        val cleanedUp = this.cleanedUp
+        createCleaner(this) {
+            @OptIn(DelicateCoroutinesApi::class)
+            GlobalScope.launch {
+                if (cleanedUp.compareAndSet(expectedValue = false, newValue = true)) {
+                    interop.abort()
+                }
+            }
+        }
+    }
 
     private var writerClosed = false
     private var readerDone = false
@@ -55,6 +73,7 @@ internal class JsCompressionSliceTransform(
                         if (input.remainingRead == 0) {
                             interop.close()
                             writerClosed = true
+                            cleanedUp.store(true)
                         }
                     }
                 } else {
@@ -101,7 +120,9 @@ internal class JsCompressionSliceTransform(
                 closeJob?.join()
             }
         } catch (e: Throwable) {
-            interop.abort()
+            if (cleanedUp.compareAndSet(expectedValue = false, newValue = true)) {
+                interop.abort()
+            }
             throw e
         }
     }
