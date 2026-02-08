@@ -19,6 +19,7 @@ import org.jetbrains.dokka.gradle.DokkaExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinBaseExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import java.io.File
 
 /** Base setup. */
@@ -29,7 +30,7 @@ class BaseBuildLogicPlugin : Plugin<Project> {
 class ConditionalAndroidBuildLogicPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         target.run {
-            if (OS.current == OS.macOS) {
+            if (OS.current in setOf(OS.macOS, OS.Linux)) {
                 pluginManager.apply("com.ensody.build-logic.android")
             }
         }
@@ -67,6 +68,7 @@ fun Project.setupBuildLogic(block: Project.() -> Unit) {
             setupKmp {
                 when (OS.current) {
                     OS.Linux -> {
+                        androidTarget()
                         jvm()
                         linuxArm64()
                         linuxX64()
@@ -82,6 +84,14 @@ fun Project.setupBuildLogic(block: Project.() -> Unit) {
                             addAllNonJsTargets()
                         } else {
                             addAllTargets()
+                        }
+                    }
+                }
+                if (targets.any { it.platformType == KotlinPlatformType.androidJvm }) {
+                    sourceSets["androidInstrumentedTest"].apply {
+                        dependsOn(sourceSets["androidUnitTest"])
+                        dependencies {
+                            implementation(rootLibs.findLibrary("androidx-test-runner").get())
                         }
                     }
                 }

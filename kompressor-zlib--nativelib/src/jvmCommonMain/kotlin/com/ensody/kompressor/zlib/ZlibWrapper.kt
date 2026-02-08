@@ -7,7 +7,7 @@ import com.ensody.nativebuilds.zlib.NativeBuildsJvmLibZ
 
 internal object ZlibWrapper : NativeBuildsJvmLib {
     override val packageName: String = "zlib"
-    override val libName: String = "zlib-jni"
+    override val libName: String = "z-jni"
     override val platformFileName: Map<String, String> = mapOf(
         "linuxArm64" to "libz-jni.so",
         "linuxX64" to "libz-jni.so",

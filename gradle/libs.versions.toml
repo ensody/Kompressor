@@ -17,6 +17,7 @@ kotlinx-io = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "
 
 ktor-utils = { module = "io.ktor:ktor-utils", version.ref = "ktor" }
 
+androidx-test-runner = { module = "androidx.test:runner", version = "1.7.0" }
 desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
 junit = { module = "junit:junit", version = "4.13.2" }
 kotlin-test-main =  { module = "org.jetbrains.kotlin:kotlin-test" }
