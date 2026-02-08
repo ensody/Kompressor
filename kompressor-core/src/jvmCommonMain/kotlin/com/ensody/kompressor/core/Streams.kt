@@ -14,42 +14,59 @@ public fun StreamCompressor(streamFactory: (OutputStream) -> OutputStream): Slic
 private class NeedsMoreInputException : IOException()
 
 private class InputStreamTransform(val streamFactory: (InputStream) -> InputStream) : SliceTransform {
-    private lateinit var streamFrom: ByteArraySlice
-    private var finishing = false
+
+    private val state = State()
+    private lateinit var cleanerHandle: Any
+
+    private class State {
+        lateinit var streamFrom: ByteArraySlice
+        var finishing = false
+        var closed = false
+    }
 
     // some streams like to read on initialization, so we need to make sure streamFrom is set first
     private val inputStream by lazy {
-        streamFactory(
+        val state = this.state
+        val stream = streamFactory(
             object : InputStream() {
                 override fun read(): Int {
-                    if (streamFrom.remainingRead == 0) {
-                        if (finishing) return -1
+                    if (state.streamFrom.remainingRead == 0) {
+                        if (state.finishing) return -1
                         throw NeedsMoreInputException()
                     }
-                    return streamFrom.data[streamFrom.readStart++].toInt() and 0xFF
+                    return state.streamFrom.data[state.streamFrom.readStart++].toInt() and 0xFF
                 }
 
                 override fun read(b: ByteArray, off: Int, len: Int): Int {
-                    if (streamFrom.remainingRead == 0) {
-                        if (finishing) return -1
+                    if (state.streamFrom.remainingRead == 0) {
+                        if (state.finishing) return -1
                         throw NeedsMoreInputException()
                     }
-                    val toRead = min(min(len, streamFrom.remainingRead), b.size - off)
-                    streamFrom.readInto(b, off, toRead)
+                    val toRead = min(min(len, state.streamFrom.remainingRead), b.size - off)
+                    state.streamFrom.readInto(b, off, toRead)
                     return toRead
                 }
 
                 override fun skip(n: Long): Long {
-                    val toSkip = min(n, streamFrom.remainingRead.toLong()).toInt()
-                    streamFrom.readStart += toSkip
+                    val toSkip = min(n, state.streamFrom.remainingRead.toLong()).toInt()
+                    state.streamFrom.readStart += toSkip
                     return toSkip.toLong()
                 }
 
                 override fun available(): Int {
-                    return streamFrom.remainingRead
+                    return state.streamFrom.remainingRead
                 }
             },
         )
+
+        cleanerHandle = createCleaner(stream) {
+            if (!state.closed) {
+                state.closed = true
+                stream.close()
+            }
+        }
+
+        stream
     }
 
     override fun transform(
@@ -57,73 +74,106 @@ private class InputStreamTransform(val streamFactory: (InputStream) -> InputStre
         output: ByteArraySlice,
         finish: Boolean,
     ) {
-        this.finishing = finish
-        if (!input.hasData && !finish) {
-            return
-        }
-        streamFrom = input
+        try {
+            this.state.finishing = finish
+            if (!input.hasData && !finish) {
+                return
+            }
+            state.streamFrom = input
 
-        val result = try {
-            inputStream.read(output.data, output.writeStart, output.remainingWrite)
-        } catch (_: NeedsMoreInputException) {
-            output.insufficient = true
-            return
-        }
-        if (result == -1) {
-            // eof
-            output.insufficient = false
-        } else {
-            output.writeStart += result
-            // Stream may have more data even if result < remainingWrite
-            output.insufficient = inputStream.available() > 0
+            val result = try {
+                inputStream.read(output.data, output.writeStart, output.remainingWrite)
+            } catch (_: NeedsMoreInputException) {
+                output.insufficient = true
+                return
+            }
+            if (result == -1) {
+                // eof
+                output.insufficient = false
+                inputStream.close()
+                state.closed = true
+            } else {
+                output.writeStart += result
+                // Stream may have more data even if result < remainingWrite
+                output.insufficient = inputStream.available() > 0
+            }
+        } catch (e: Throwable) {
+            if (!state.closed) {
+                state.closed = true
+                inputStream.close()
+            }
+            throw e
         }
     }
 }
 
 private class OutputStreamTransform(val streamFactory: (OutputStream) -> OutputStream) : SliceTransform {
-    private var sliceOutputStream: SliceOutputStream? = null
-    private var internalOutputStream: OutputStream? = null
-    private var closed = false
+    private val state = State()
+    private lateinit var cleanerHandle: Any
+
+    private class State {
+        var sliceOutputStream: SliceOutputStream? = null
+        var internalOutputStream: OutputStream? = null
+        var closed = false
+    }
 
     override fun transform(
         input: ByteArraySlice,
         output: ByteArraySlice,
         finish: Boolean,
     ) {
-        // Initialize stream on first call - must set output BEFORE creating wrapped stream
-        // because some streams (like GZIPOutputStream) write header data during construction
-        val sliceOut = sliceOutputStream ?: run {
-            val stream = SliceOutputStream()
-            sliceOutputStream = stream
-            stream.setOutput(output)
-            internalOutputStream = streamFactory(stream)
-            stream
-        }
+        try {
+            // Initialize stream on first call - must set output BEFORE creating wrapped stream
+            // because some streams (like GZIPOutputStream) write header data during construction
+            val sliceOut = state.sliceOutputStream ?: run {
+                val stream = SliceOutputStream()
+                state.sliceOutputStream = stream
+                stream.setOutput(output)
+                val internal = streamFactory(stream)
+                state.internalOutputStream = internal
 
-        // Set the current output slice for direct writing
-        sliceOut.setOutput(output)
+                val state = this.state
+                cleanerHandle = createCleaner(internal) {
+                    if (!state.closed) {
+                        state.closed = true
+                        internal.close()
+                    }
+                }
 
-        // First, drain any buffered overflow data from previous calls
-        sliceOut.drainBuffer()
+                stream
+            }
 
-        // Write any remaining input to the compressor (only if output has space and no buffered data)
-        if (input.remainingRead > 0 && !closed && !sliceOut.hasBufferedData()) {
-            val readRemaining = input.remainingRead
-            val readStart = input.readStart
-            input.readStart += readRemaining
-            internalOutputStream?.write(input.data, readStart, readRemaining)
-        }
+            // Set the current output slice for direct writing
+            sliceOut.setOutput(output)
 
-        // Close the stream when finishing (to flush all compressed data)
-        if (finish && !closed && !sliceOut.hasBufferedData()) {
-            internalOutputStream?.close()
-            closed = true
-            // Drain any data that was written during close/flush
+            // First, drain any buffered overflow data from previous calls
             sliceOut.drainBuffer()
-        }
 
-        // Signal if more data remains to be copied
-        output.insufficient = sliceOut.hasBufferedData()
+            // Write any remaining input to the compressor (only if output has space and no buffered data)
+            if (input.remainingRead > 0 && !state.closed && !sliceOut.hasBufferedData()) {
+                val readRemaining = input.remainingRead
+                val readStart = input.readStart
+                input.readStart += readRemaining
+                state.internalOutputStream?.write(input.data, readStart, readRemaining)
+            }
+
+            // Close the stream when finishing (to flush all compressed data)
+            if (finish && !state.closed && !sliceOut.hasBufferedData()) {
+                state.internalOutputStream?.close()
+                state.closed = true
+                // Drain any data that was written during close/flush
+                sliceOut.drainBuffer()
+            }
+
+            // Signal if more data remains to be copied
+            output.insufficient = sliceOut.hasBufferedData()
+        } catch (e: Throwable) {
+            if (!state.closed) {
+                state.closed = true
+                state.internalOutputStream?.close()
+            }
+            throw e
+        }
     }
 }
 
