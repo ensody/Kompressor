@@ -28,7 +28,7 @@ public class RandomSource(private val random: Random, private val maxBytes: Long
             (end - start).toInt()
         }
         generated += result
-        return generated
+        return result.toLong()
     }
 
     override fun close() {

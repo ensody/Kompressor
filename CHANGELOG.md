@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+* Added `StreamCompressor`/`StreamDecompressor` on JVM for wrapping Java IO streams, such as those from Apache Commons
+  Compress.
+
 ## 0.4.6
 
 * Fixed incorrect JNI lib name on Android.
