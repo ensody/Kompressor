@@ -14,6 +14,7 @@ setupBuildLogic {
         }
         sourceSets.commonTest.dependencies {
             implementation(project(":kompressor-test"))
+            implementation(libs.coroutines.test)
         }
     }
 }

@@ -2,8 +2,12 @@
 
 ## Unreleased
 
-* Added `StreamCompressor`/`StreamDecompressor` on JVM for wrapping Java IO streams, such as those from Apache Commons
+* Added `StreamCompressor`/`StreamDecompressor` to `kompressor-core` on JVM, which allow wrapping Java IO streams, such
+  as those from Apache Commons
   Compress.
+* Added `kompressor-js` module providing support for JS and WasmJS targets using the browser's Compression Streams
+  API.
+* Added `ExperimentalCompressionFormat` annotation to mark formats that might not be supported on all platforms or execution environments.
 
 ## 0.4.6
 

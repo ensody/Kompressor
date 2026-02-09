@@ -49,7 +49,7 @@ public suspend fun AsyncSliceTransform.transform(input: ByteArray): ByteArray {
         if (outputSlice.insufficient) {
             outputSlices.add(ByteArraySlice(8192))
         }
-    } while (inputSlice.remainingRead != 0 || outputSlices.last().insufficient)
+    } while (inputSlice.remainingRead != 0 || outputSlice.insufficient)
     return outputSlices.getOutput()
 }
 
