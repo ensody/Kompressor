@@ -6,10 +6,12 @@ import com.ensody.kompressor.core.createCleaner
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.js.ExperimentalWasmJsInterop
@@ -29,8 +31,10 @@ internal class JsCompressionSliceTransform(
         createCleaner(this) {
             @OptIn(DelicateCoroutinesApi::class)
             GlobalScope.launch {
-                if (cleanedUp.compareAndSet(expectedValue = false, newValue = true)) {
-                    interop.abort()
+                withContext(NonCancellable) {
+                    if (cleanedUp.compareAndSet(expectedValue = false, newValue = true)) {
+                        interop.abort()
+                    }
                 }
             }
         }
@@ -120,8 +124,10 @@ internal class JsCompressionSliceTransform(
                 closeJob?.join()
             }
         } catch (e: Throwable) {
-            if (cleanedUp.compareAndSet(expectedValue = false, newValue = true)) {
-                interop.abort()
+            withContext(NonCancellable) {
+                if (cleanedUp.compareAndSet(expectedValue = false, newValue = true)) {
+                    interop.abort()
+                }
             }
             throw e
         }
