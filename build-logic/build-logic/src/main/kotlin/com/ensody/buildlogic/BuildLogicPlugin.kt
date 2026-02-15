@@ -114,38 +114,38 @@ fun Project.setupBuildLogic(includeDefaultTargets: Boolean = true, block: Projec
                 group = "verification"
                 if (includeDefaultTargets) {
                     dependsOn("jvmTest")
-                }
-                when (OS.current) {
-                    OS.Linux -> {
-                        when (CpuArch.current) {
-                            CpuArch.aarch64 -> {
-                                dependsOn(
-                                    "linuxArm64Test",
-                                )
-                            }
+                    when (OS.current) {
+                        OS.Linux -> {
+                            when (CpuArch.current) {
+                                CpuArch.aarch64 -> {
+                                    dependsOn(
+                                        "linuxArm64Test",
+                                    )
+                                }
 
-                            CpuArch.x64 -> {
-                                dependsOn(
-                                    "linuxX64Test",
-                                )
+                                CpuArch.x64 -> {
+                                    dependsOn(
+                                        "linuxX64Test",
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    OS.macOS -> {
-                        dependsOn(
-                            "testDebugUnitTest",
-                            "iosSimulatorArm64Test",
-                            "iosX64Test",
-                            "macosArm64Test",
-                            "macosX64Test",
-                        )
-                    }
+                        OS.macOS -> {
+                            dependsOn(
+                                "testDebugUnitTest",
+                                "iosSimulatorArm64Test",
+                                "iosX64Test",
+                                "macosArm64Test",
+                                "macosX64Test",
+                            )
+                        }
 
-                    OS.Windows -> {
-                        dependsOn(
-                            "mingwX64Test",
-                        )
+                        OS.Windows -> {
+                            dependsOn(
+                                "mingwX64Test",
+                            )
+                        }
                     }
                 }
             }
