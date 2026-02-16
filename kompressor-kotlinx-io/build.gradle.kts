@@ -9,7 +9,6 @@ plugins {
 
 setupBuildLogic {
     kotlin {
-        allJs()
         sourceSets.commonMain.dependencies {
             api(project(":kompressor-core"))
             api(libs.kotlinx.io)

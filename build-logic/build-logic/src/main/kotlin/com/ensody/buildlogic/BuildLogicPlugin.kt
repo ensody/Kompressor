@@ -57,7 +57,7 @@ fun Project.setupRepositories() {
 
 fun Project.setupBuildLogic(
     includeDefaultTargets: Boolean = true,
-    includeJsTargetsInDefault: Boolean = true,
+    excludeJs: Boolean = false,
     block: Project.() -> Unit,
 ) {
     setupBuildLogicBase {
@@ -70,6 +70,10 @@ fun Project.setupBuildLogic(
         }
         if (extensions.findByType<KotlinMultiplatformExtension>() != null) {
             setupKmp {
+                if(!excludeJs) {
+                    allJs()
+                }
+
                 if (includeDefaultTargets) {
                     when (OS.current) {
                         OS.Linux -> {
@@ -85,11 +89,7 @@ fun Project.setupBuildLogic(
                         }
 
                         OS.macOS -> {
-                            if (includeJsTargetsInDefault) {
-                                addAllTargets()
-                            } else {
-                                addAllNonJsTargets()
-                            }
+                            addAllNonJsTargets()
                         }
                     }
                 }
@@ -118,6 +118,9 @@ fun Project.setupBuildLogic(
                 group = "verification"
                 if (includeDefaultTargets) {
                     dependsOn("jvmTest")
+                    if(!excludeJs) {
+                        dependsOn("jsTest", "wasmJsTest")
+                    }
                     when (OS.current) {
                         OS.Linux -> {
                             when (CpuArch.current) {
