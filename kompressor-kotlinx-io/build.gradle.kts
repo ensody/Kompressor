@@ -1,4 +1,3 @@
-import com.ensody.buildlogic.allJs
 import com.ensody.buildlogic.setupBuildLogic
 
 plugins {

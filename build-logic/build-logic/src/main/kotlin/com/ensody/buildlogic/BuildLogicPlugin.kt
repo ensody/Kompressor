@@ -70,7 +70,7 @@ fun Project.setupBuildLogic(
         }
         if (extensions.findByType<KotlinMultiplatformExtension>() != null) {
             setupKmp {
-                if(!excludeJs) {
+                if (!excludeJs) {
                     allJs()
                 }
 
@@ -118,7 +118,7 @@ fun Project.setupBuildLogic(
                 group = "verification"
                 if (includeDefaultTargets) {
                     dependsOn("jvmTest")
-                    if(!excludeJs) {
+                    if (!excludeJs) {
                         dependsOn("jsTest", "wasmJsTest")
                     }
                     when (OS.current) {
