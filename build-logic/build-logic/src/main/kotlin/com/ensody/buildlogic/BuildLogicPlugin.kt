@@ -55,7 +55,11 @@ fun Project.setupRepositories() {
     }
 }
 
-fun Project.setupBuildLogic(includeDefaultTargets: Boolean = true, block: Project.() -> Unit) {
+fun Project.setupBuildLogic(
+    includeDefaultTargets: Boolean = true,
+    includeJsTargetsInDefault: Boolean = true,
+    block: Project.() -> Unit,
+) {
     setupBuildLogicBase {
         setupRepositories()
         if (extensions.findByType<JavaPlatformExtension>() != null) {
@@ -81,10 +85,10 @@ fun Project.setupBuildLogic(includeDefaultTargets: Boolean = true, block: Projec
                         }
 
                         OS.macOS -> {
-                            if (project.name.endsWith("--nativelib")) {
-                                addAllNonJsTargets()
-                            } else {
+                            if (includeJsTargetsInDefault) {
                                 addAllTargets()
+                            } else {
+                                addAllNonJsTargets()
                             }
                         }
                     }
