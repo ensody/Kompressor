@@ -9,12 +9,16 @@ class CleanerTest {
     @Test
     fun testCleaner() = runTest {
         var cleaned = false
-        val resource = Any()
+        val resource = object : AutoCloseable {
+            override fun close() {
+                cleaned = true
+            }
+        }
 
         fun create() {
             // The handle must be local to this function so it can be GC'd after the function returns
             createCleaner(resource) {
-                cleaned = true
+                it.close()
             }
         }
 

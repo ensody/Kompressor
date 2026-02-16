@@ -22,21 +22,25 @@ internal class JsCompressionSliceTransform(
     format: String,
     isCompression: Boolean,
 ) : AsyncSliceTransform {
-    private val interop = createJsCompressionInterop(format, isCompression)
-    private val cleanedUp = AtomicBoolean(false)
-
-    init {
-        val interop = this.interop
-        val cleanedUp = this.cleanedUp
-        createCleaner(this) {
-            @OptIn(DelicateCoroutinesApi::class)
-            GlobalScope.launch {
-                withContext(NonCancellable) {
-                    if (cleanedUp.compareAndSet(expectedValue = false, newValue = true)) {
-                        interop.abort()
-                    }
+    private class CleanableInterop(
+        val interop: JsCompressionInterop,
+    ) : JsCompressionInterop by interop {
+        val cleanedUp = AtomicBoolean(false)
+        suspend fun cleanup() {
+            withContext(NonCancellable) {
+                if (cleanedUp.compareAndSet(expectedValue = false, newValue = true)) {
+                    interop.abort()
                 }
             }
+        }
+    }
+
+    private val interop = CleanableInterop(createJsCompressionInterop(format, isCompression))
+
+    val cleanerHandle = createCleaner(interop) {
+        @OptIn(DelicateCoroutinesApi::class)
+        GlobalScope.launch {
+            it.cleanup()
         }
     }
 
@@ -77,7 +81,7 @@ internal class JsCompressionSliceTransform(
                         if (input.remainingRead == 0) {
                             interop.close()
                             writerClosed = true
-                            cleanedUp.store(true)
+                            interop.cleanedUp.store(true)
                         }
                     }
                 } else {
@@ -124,11 +128,7 @@ internal class JsCompressionSliceTransform(
                 closeJob?.join()
             }
         } catch (e: Throwable) {
-            withContext(NonCancellable) {
-                if (cleanedUp.compareAndSet(expectedValue = false, newValue = true)) {
-                    interop.abort()
-                }
-            }
+            interop.cleanup()
             throw e
         }
     }

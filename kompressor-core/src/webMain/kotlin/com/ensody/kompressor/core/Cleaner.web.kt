@@ -6,12 +6,14 @@ import kotlin.js.ExperimentalWasmJsInterop
 import kotlin.js.JsAny
 
 /**
- * Returns a handler which calls [cleanup] when the given [resource] is GC'd.
+ * Returns a handler which calls [cleanup] with the given [resource] when the returned handler is garbage collected.
  *
- * **THIS IS NOT THE SAME API AS THE JVM VERSION**
+ * IMPORTANT: [resource] MUST NOT, directly or indirectly, hold a reference to the returned cleanup handler.
  */
-public fun createCleaner(resource: Any, cleanup: () -> Unit) {
-    Cleaner.register(resource) { cleanup() }
+public fun <T> createCleaner(resource: T, cleanup: (T) -> Unit): Any {
+    val handle = Any()
+    Cleaner.register(handle) { cleanup(resource) }
+    return handle
 }
 
 private object Cleaner {

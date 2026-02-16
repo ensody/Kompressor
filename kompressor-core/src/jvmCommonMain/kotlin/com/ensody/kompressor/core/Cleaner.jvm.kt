@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Returns a handler which calls [cleanup] with the given [resource] when the returned handler is garbage collected.
  *
- * IMPORTANT: [resource] MUST NOT, directly or indirectly, hold a reference to the cleanup handler.
+ * IMPORTANT: [resource] MUST NOT, directly or indirectly, hold a reference to the returned cleanup handler.
  */
 public fun <T : Any> createCleaner(resource: T, cleanup: (T) -> Unit): Any {
     val ref = Object()
