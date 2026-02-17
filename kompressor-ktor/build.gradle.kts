@@ -6,7 +6,7 @@ plugins {
     id("com.ensody.build-logic.publish")
 }
 
-setupBuildLogic {
+setupBuildLogic(excludeJs = true) {
     kotlin {
         sourceSets.commonMain.dependencies {
             api(project(":kompressor-kotlinx-io"))
