@@ -9,7 +9,7 @@ plugins {
     id("com.ensody.nativebuilds")
 }
 
-setupBuildLogic {
+setupBuildLogic(excludeJs = true) {
     kotlin {
         sourceSets.commonMain.dependencies {
             api(project(":kompressor-core"))
