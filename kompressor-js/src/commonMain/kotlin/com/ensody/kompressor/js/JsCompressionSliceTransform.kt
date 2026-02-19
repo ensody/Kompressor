@@ -128,7 +128,9 @@ internal class JsCompressionSliceTransform(
                 closeJob?.join()
             }
         } catch (e: Throwable) {
-            interop.cleanup()
+            withContext(NonCancellable) {
+                interop.cleanup()
+            }
             throw e
         }
     }
