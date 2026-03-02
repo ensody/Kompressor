@@ -53,6 +53,15 @@ internal class ZstdTest {
         val compressed = ZstdCompressor(dictionary = dictionary).transform(data)
         val decompressed = ZstdDecompressor(dictionary = dictionary).transform(compressed)
         assertContentEquals(data, decompressed)
+
+        // Verify dictionary is actually used: decompression should fail without dictionary
+        kotlin.test.assertFails {
+            ZstdDecompressor().transform(compressed)
+        }
+
+        // Verify dictionary is actually effective: it should be smaller than without dictionary
+        val compressedWithoutDict = ZstdCompressor().transform(data)
+        kotlin.test.assertTrue(compressed.size < compressedWithoutDict.size, "Compressed with dict should be smaller")
     }
 
     @Test
