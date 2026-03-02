@@ -4,11 +4,12 @@ import com.ensody.kompressor.core.ByteArraySlice
 import com.ensody.kompressor.core.SliceTransform
 import com.ensody.kompressor.core.createCleaner
 
-public actual fun ZstdCompressor(compressionLevel: Int): SliceTransform =
-    ZstdCompressorImpl(compressionLevel = compressionLevel)
+public actual fun ZstdCompressor(compressionLevel: Int, dictionary: ByteArray?): SliceTransform =
+    ZstdCompressorImpl(compressionLevel = compressionLevel, dictionary = dictionary)
 
 internal class ZstdCompressorImpl(
     private val compressionLevel: Int = 3,
+    private val dictionary: ByteArray? = null,
 ) : SliceTransform {
     private val cctx: Long = ZstdWrapper.createCompressor().also {
         check(it != 0L) { "Failed allocating zstd cctx" }
@@ -18,6 +19,9 @@ internal class ZstdCompressorImpl(
 
     init {
         ZstdWrapper.setParameter(cctx, ZstdParameter.compressionLevel.toInt(), compressionLevel)
+        dictionary?.let {
+            checkErrorResult(ZstdWrapper.loadCompressorDictionary(cctx, it))
+        }
     }
 
     override fun transform(input: ByteArraySlice, output: ByteArraySlice, finish: Boolean) {

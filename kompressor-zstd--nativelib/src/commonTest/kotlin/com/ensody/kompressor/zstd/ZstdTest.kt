@@ -47,6 +47,15 @@ internal class ZstdTest {
     }
 
     @Test
+    fun dictionaryRoundtrip() {
+        val dictionary = "this is a test dictionary".encodeToByteArray()
+        val data = "this is some data to compress using a dictionary".encodeToByteArray()
+        val compressed = ZstdCompressor(dictionary = dictionary).transform(data)
+        val decompressed = ZstdDecompressor(dictionary = dictionary).transform(compressed)
+        assertContentEquals(data, decompressed)
+    }
+
+    @Test
     fun largeSample() {
         val seed = 42
         val size: Long = 256L * 1024 * 1024 + 3

@@ -3,6 +3,7 @@ package com.ensody.kompressor.zstd
 import com.ensody.kompressor.core.ByteArraySlice
 import com.ensody.kompressor.core.SliceTransform
 import com.ensody.kompressor.internal.zstd.ZSTD_DCtx
+import com.ensody.kompressor.internal.zstd.ZSTD_DCtx_loadDictionary
 import com.ensody.kompressor.internal.zstd.ZSTD_createDCtx
 import com.ensody.kompressor.internal.zstd.ZSTD_decompressStream
 import com.ensody.kompressor.internal.zstd.ZSTD_freeDCtx
@@ -21,17 +22,28 @@ import kotlinx.cinterop.toKString
 import kotlinx.cinterop.usePinned
 import kotlin.native.ref.createCleaner
 
-public actual fun ZstdDecompressor(): SliceTransform =
-    ZstdDecompressorImpl()
+public actual fun ZstdDecompressor(dictionary: ByteArray?): SliceTransform =
+    ZstdDecompressorImpl(dictionary = dictionary)
 
 @OptIn(UnsafeNumber::class)
-internal class ZstdDecompressorImpl : SliceTransform {
+internal class ZstdDecompressorImpl(
+    private val dictionary: ByteArray? = null,
+) : SliceTransform {
     private val dctx: CPointer<ZSTD_DCtx> = checkNotNull(ZSTD_createDCtx()) {
         "Failed allocating zstd dctx"
     }
 
     val cleaner = createCleaner(dctx) {
         ZSTD_freeDCtx(it)
+    }
+
+    init {
+        dictionary?.usePinned {
+            val result = ZSTD_DCtx_loadDictionary(dctx, it.addressOf(0), it.get().size.convert())
+            if (ZSTD_isError(result) != 0U) {
+                error("Bad zstd result code $result: ${ZSTD_getErrorName(result)?.toKString()}")
+            }
+        }
     }
 
     override fun transform(input: ByteArraySlice, output: ByteArraySlice, finish: Boolean) = memScoped {

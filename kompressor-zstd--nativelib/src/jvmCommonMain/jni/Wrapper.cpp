@@ -39,6 +39,40 @@ Java_com_ensody_kompressor_zstd_ZstdWrapper_setParameter(
 }
 
 JNIEXPORT jlong JNICALL
+Java_com_ensody_kompressor_zstd_ZstdWrapper_loadCompressorDictionary(
+        JNIEnv *env,
+        jobject type,
+        jlong cctxPointer,
+        jbyteArray dictionary
+) {
+    auto cctx = reinterpret_cast<ZSTD_CCtx *>(cctxPointer);
+    auto dictionaryElements = env->GetByteArrayElements(dictionary, NULL);
+    if (dictionaryElements == NULL) {
+        return -ZSTD_error_GENERIC;
+    }
+    size_t result = ZSTD_CCtx_loadDictionary(cctx, dictionaryElements, env->GetArrayLength(dictionary));
+    env->ReleaseByteArrayElements(dictionary, dictionaryElements, JNI_ABORT);
+    return result;
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_ensody_kompressor_zstd_ZstdWrapper_loadDecompressorDictionary(
+        JNIEnv *env,
+        jobject type,
+        jlong dctxPointer,
+        jbyteArray dictionary
+) {
+    auto dctx = reinterpret_cast<ZSTD_DCtx *>(dctxPointer);
+    auto dictionaryElements = env->GetByteArrayElements(dictionary, NULL);
+    if (dictionaryElements == NULL) {
+        return -ZSTD_error_GENERIC;
+    }
+    size_t result = ZSTD_DCtx_loadDictionary(dctx, dictionaryElements, env->GetArrayLength(dictionary));
+    env->ReleaseByteArrayElements(dictionary, dictionaryElements, JNI_ABORT);
+    return result;
+}
+
+JNIEXPORT jlong JNICALL
 Java_com_ensody_kompressor_zstd_ZstdWrapper_compressStream(
         JNIEnv *env,
         jobject type,
