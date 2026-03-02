@@ -3,6 +3,7 @@ package com.ensody.kompressor.zstd
 import com.ensody.kompressor.core.ByteArraySlice
 import com.ensody.kompressor.core.SliceTransform
 import com.ensody.kompressor.internal.zstd.ZSTD_CCtx
+import com.ensody.kompressor.internal.zstd.ZSTD_CCtx_loadDictionary
 import com.ensody.kompressor.internal.zstd.ZSTD_CCtx_setParameter
 import com.ensody.kompressor.internal.zstd.ZSTD_compressStream2
 import com.ensody.kompressor.internal.zstd.ZSTD_createCCtx
@@ -24,12 +25,13 @@ import kotlinx.cinterop.toKString
 import kotlinx.cinterop.usePinned
 import kotlin.native.ref.createCleaner
 
-public actual fun ZstdCompressor(compressionLevel: Int): SliceTransform =
-    ZstdCompressorImpl(compressionLevel = compressionLevel)
+public actual fun ZstdCompressor(compressionLevel: Int, dictionary: ByteArray?): SliceTransform =
+    ZstdCompressorImpl(compressionLevel = compressionLevel, dictionary = dictionary)
 
 @OptIn(UnsafeNumber::class)
 internal class ZstdCompressorImpl(
     private val compressionLevel: Int = 3,
+    private val dictionary: ByteArray? = null,
 ) : SliceTransform {
     private val cctx: CPointer<ZSTD_CCtx> = checkNotNull(ZSTD_createCCtx()) {
         "Failed allocating zstd cctx"
@@ -41,6 +43,12 @@ internal class ZstdCompressorImpl(
 
     init {
         ZSTD_CCtx_setParameter(cctx, ZstdParameter.compressionLevel, compressionLevel)
+        dictionary?.usePinned {
+            val result = ZSTD_CCtx_loadDictionary(cctx, it.addressOf(0), it.get().size.convert())
+            if (ZSTD_isError(result) != 0U) {
+                error("Bad zstd result code $result: ${ZSTD_getErrorName(result)?.toKString()}")
+            }
+        }
     }
 
     override fun transform(input: ByteArraySlice, output: ByteArraySlice, finish: Boolean) = memScoped {

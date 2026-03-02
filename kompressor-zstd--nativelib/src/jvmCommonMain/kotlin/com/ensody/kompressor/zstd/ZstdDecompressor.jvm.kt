@@ -4,15 +4,23 @@ import com.ensody.kompressor.core.ByteArraySlice
 import com.ensody.kompressor.core.SliceTransform
 import com.ensody.kompressor.core.createCleaner
 
-public actual fun ZstdDecompressor(): SliceTransform =
-    ZstdDecompressorImpl()
+public actual fun ZstdDecompressor(dictionary: ByteArray?): SliceTransform =
+    ZstdDecompressorImpl(dictionary = dictionary)
 
-internal class ZstdDecompressorImpl : SliceTransform {
+internal class ZstdDecompressorImpl(
+    private val dictionary: ByteArray? = null,
+) : SliceTransform {
     private val dctx: Long = ZstdWrapper.createDecompressor().also {
         check(it != 0L) { "Failed allocating zstd dctx" }
     }
 
     val cleaner = createCleaner(dctx, ZstdWrapper::freeDecompressor)
+
+    init {
+        dictionary?.let {
+            checkErrorResult(ZstdWrapper.loadDecompressorDictionary(dctx, it))
+        }
+    }
 
     override fun transform(input: ByteArraySlice, output: ByteArraySlice, finish: Boolean) {
         val result = ZstdWrapper.decompressStream(
